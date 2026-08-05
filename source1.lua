@@ -689,10 +689,9 @@ SilentAim:AddToggle(".", {
   Callback = function(Value)
     SilentAimFunctions.DrawFOV = Value
   end,
-}):AddColorpicker(".", {
-  Text = "FOV Color",
+}):AddColorPicker(".", {
+  Title = "FOV Color",
   Default = Color3.fromRGB(255, 255, 255),
-  Visible = true,
   Callback = function(Value)
     SilentAimFunctions.FOVColor = Value
   end,
