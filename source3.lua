@@ -424,24 +424,6 @@ local function IsPlayerDowned(Player)
     return false
 end
 
--- ===== R6 BONE RESOLVER =====
-local function ResolveR6Bone(Character, BoneName)
-    if not Character then return nil end
-    -- Map common names to actual R6 part names
-    local BoneMap = {
-        ["Head"] = "Head",
-        ["Torso"] = "Torso",
-        ["HumanoidRootPart"] = "HumanoidRootPart",
-        ["LeftArm"] = "LeftArm",
-        ["RightArm"] = "RightArm",
-        ["LeftLeg"] = "LeftLeg",
-        ["RightLeg"] = "RightLeg"
-    }
-    local RealName = BoneMap[BoneName] or BoneName
-    return Character:FindFirstChild(RealName)
-end
-
--- ===== FIXED SILENT AIM =====
 local function SetupSilentAim()
     local SilentAimCircle = Drawing.new("Circle")
     SilentAimCircle.Color = SilentAimFunctions.FOVColor
@@ -501,8 +483,9 @@ local function SetupSilentAim()
       
         if math.random(1, 100) > SilentAimFunctions.MissChance then return end
 
-        -- Use R6 resolver to get the correct part
-        local TargetPart = ResolveR6Bone(Target.Character, SilentAimFunctions.TargetBone)
+        local PossibleParts = SilentAimFunctions.TargetBone
+        local PartsName = PossibleParts[1] or "Head"
+        local TargetPart = Target.Character:FindFirstChild(PartsName)
         
         if TargetPart then
             local PartPos = TargetPart.Position
@@ -745,7 +728,7 @@ SilentAim:AddSlider(".", {
 SilentAim:AddDropdown(".", {
   Text = "Target Bone",
   Default = "Head",
-  Values = {"Head", "Torso", "HumanoidRootPart", "LeftLeg", "RightLeg", "LeftArm", "RightArm"},
+  Values = {"Head", "Torso", "Left Leg", "Right Leg", "Left Arm", "Right Arm"},
   Multi = false,
   Visible = true,
   Callback = function(Value)
