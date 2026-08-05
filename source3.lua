@@ -31,7 +31,7 @@ local Tabs = {
 }
 
 local Miscenalleous = Tabs.Misc:AddLeftGroupbox("Miscenalleous")
-local SilentAim = Tabs.Misc:AddRightGroupbox("Silent Aim")
+local SilentAim = Tabs.Rage:AddRightGroupbox("Silent Aim")
 local Movement = Tabs.Misc:AddRightGroupbox("Movement")
 local Effects = Tabs.Visuals:AddLeftGroupbox("Effects")
 
@@ -708,12 +708,9 @@ SilentAim:AddToggle(".", {
   Callback = function(Value)
     SilentAimFunctions.DrawFOV = Value
   end,
-})
-
-SilentAim:AddColorpicker(".", {
-  Text = "FOV Color",
+}):AddColorPicker(".", {
+  Title = "FOV Color",
   Default = Color3.fromRGB(255, 255, 255),
-  Visible = true,
   Callback = function(Value)
     SilentAimFunctions.FOVColor = Value
   end,
