@@ -1,4 +1,4 @@
-local Players = game:GetService("Players")
+qqlocal Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local RunService = game:GetService("RunService")
@@ -31,6 +31,7 @@ local Tabs = {
 }
 
 local Miscenalleous = Tabs.Misc:AddLeftGroupbox("Miscenalleous")
+local Aimbot = Tabs.Legit:AddLeftGroupbox("Aimbot")
 local SilentAim = Tabs.Rage:AddRightGroupbox("Silent Aim")
 local Movement = Tabs.Misc:AddRightGroupbox("Movement")
 local Effects = Tabs.Visuals:AddLeftGroupbox("Effects")
@@ -82,6 +83,20 @@ local SilentAimFunctions = {
   TeamCheck = false,
   DownedCheck = false,
   WallCheck = false
+}
+
+local AimbotFunctions = {
+  Enabled = false,
+  FOV = 315,
+  DrawFOV = false,
+  FOVColor = Color3.fromRGB(255, 255, 255),
+  Dynamic = false,
+  Smoothness = 80,
+  Distance = 100,
+  TargetBone = {"Head"},
+  TargetPriority = {"Closest to Crosshair", "Lowest Health", "Highest Health", "Closest Distance", "Farthest Distance", "Random"},
+  TargetVisibleOnly = false,
+  IgnoreDownedTarget = false
 }
 
 local RuntimeState = { Data = {} }
@@ -504,6 +519,88 @@ local function SetupSilentAim()
     end)
 end
 
+local function AimbotFunction()
+  while true do
+    if AimbotFunctions.Enabled then
+      local Character = LocalPlayer.Character
+      if Character and Character:FindFirstChild("Head") then
+        local Target = nil
+        local BestScore = math.huge
+        local Center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+        local CurrentTargets = {}
+        for _, Player in pairs(Players:GetPlayers()) do
+          if AimbotFunctions.IgnoreDownedTarget and IsPlayerDowned(Player) then continue end
+          local TargetBone = AimbotFunctions.TargetBone and AimbotFunctions.TargetBone[1] or "Head"
+          if Player ~= LocalPlayer and Player.Character and Player.Character:FindFirstChild(TargetBone) then
+            local PartToAim = Player.Character[TargetBone]
+            local Pos, OnScreen = Camera:WorldToViewportPoint(PartToAim.Position)
+            if OnScreen then
+              local MouseDistance = (Vector2.new(Pos.X, Pos.Y) - Center).Magnitude
+              local WorldDistance = (Camera.CFrame.Position - PartToAim.Position).Magnitude
+              if MouseDistance <= AimbotFunctions.FOV and WorldDistance <= AimbotFunctions.Distance then
+                local CanSee = true
+                if AimbotFunctions.TargetVisibleOnly then
+                  local RayParams = RaycastParams.new()
+                  RayParams.FilterDescendantsInstances = {Character, Camera}
+                  RayParams.FilterType = Enum.RaycastFilterType.Exclude
+                  local RayResult = Workspace:Raycast(Camera.CFrame.Position, (PartToAim.Position - Camera.CFrame.Position), RayParams)
+                  if RayResult and not RayResult.Instance:IsDescendantOf(Player.Character) then CanSee = false end
+                end
+                if CanSee then
+                  local Health = Player.Character:FindFirstChild("Humanoid") and Player.Character.Humanoid.Health or 100
+                  table.insert(CurrentTargets, {Part = PartToAim, MouseDist = MouseDistance, WorldDist = WorldDistance, Health = Health, Player = Player})
+                end
+              end
+            end
+          end
+        end
+        if #CurrentTargets > 0 then
+          local PriorityType = AimbotFunctions.TargetPriority[1] or "Closest to Crosshair"
+          local SelectedTarget = CurrentTargets[1]
+          if PriorityType == "Closest to Crosshair" then
+            local CrosshairCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+            for _, v in pairs(CurrentTargets) do
+              local TargetScreenPos, IsOnScreen = Camera:WorldToViewportPoint(v.Part.Position)
+              if IsOnScreen then
+                local DistanceFromCrosshair = (Vector2.new(TargetScreenPos.X, TargetScreenPos.Y) - CrosshairCenter).Magnitude
+                local CurrentDistance = (Vector2.new(Camera:WorldToViewportPoint(SelectedTarget.Part.Position).X, Camera:WorldToViewportPoint(SelectedTarget.Part.Position).Y) - CrosshairCenter).Magnitude
+                if DistanceFromCrosshair < CurrentDistance then
+                  SelectedTarget = v
+                end
+              end
+            end
+          elseif PriorityType == "Lowest Health" then
+            for _, v in pairs(CurrentTargets) do
+              if v.Health < SelectedTarget.Health then SelectedTarget = v end
+            end
+          elseif PriorityType == "Highest Health" then
+            for _, v in pairs(CurrentTargets) do
+              if v.Health > SelectedTarget.Health then SelectedTarget = v end
+            end
+          elseif PriorityType == "Closest Distance" then
+            for _, v in pairs(CurrentTargets) do
+              if v.WorldDist < SelectedTarget.WorldDist then SelectedTarget = v end
+            end
+          elseif PriorityType == "Farthest Distance" then
+            for _, v in pairs(CurrentTargets) do
+              if v.WorldDist > SelectedTarget.WorldDist then SelectedTarget = v end
+            end
+          elseif PriorityType == "Random" then
+            SelectedTarget = CurrentTargets[math.random(1, #CurrentTargets)]
+          end
+          Target = SelectedTarget.Part
+        end
+      end
+    end
+    if Target then
+      local Goal = CFrame.new(Camera.CFrame.Position, Target.Position)
+      Camera.CFrame = AimbotFunctions.Smoothness and Camera.CFrame:Lerp(Goal, AimbotFunctions.Smoothness / 100) or Goal
+    end
+    task.wait()
+  end
+end
+task.spawn(AimbotFunction)
+
 local FastWalkSlider
 Movement:AddToggle(".", {
   Text = "Fast Walk",
@@ -657,51 +754,61 @@ Miscenalleous:AddToggle(".", {
   end,
 })
 
-SilentAim:AddToggle(".", {
+Aimbot:AddToggle(".", {
   Text = "Enabled",
   Default = false,
   Disabled = false,  
   Visible = true, 
   Risky = false,
   Callback = function(Value)
-    SilentAimFunctions.Enabled = Value
-    if Value then task.spawn(SetupSilentAim) end
+    AimbotFunctions.Enabled = Value
   end,
 })
 
-SilentAim:AddSlider(".", {
-  Text = "FOV Size",
-  Default = 10,
+Aimbot:AddSlider(".", {
+  Text = "FOV",
+  Default = 315,
   Min = 1,
-  Max = 300,
-  Rounding = 1,
+  Max = 900,
+  Rounding = 2,
   Compact = false,
   Visible = true,
   Callback = function(Value)
-    SilentAimFunctions.FOVSize = Value
+    AimbotFunctions.FOV = Value
   end,
 })
 
-SilentAim:AddToggle(".", {
+Aimbot:AddToggle(".", {
   Text = "Draw FOV",
   Default = false,
   Disabled = false,  
   Visible = true, 
   Risky = false,
   Callback = function(Value)
-    SilentAimFunctions.DrawFOV = Value
+    AimbotFunctions.DrawFOV = Value
   end,
 }):AddColorPicker(".", {
   Title = "FOV Color",
   Default = Color3.fromRGB(255, 255, 255),
   Callback = function(Value)
-    SilentAimFunctions.FOVColor = Value
+    AimbotFunctions.FOVColor = Value
   end,
 })
 
-SilentAim:AddSlider(".", {
-  Text = "Miss Chance",
-  Default = 10,
+Aimbot:AddToggle(".", {
+  Text = "Dynamic",
+  Default = false,
+  Disabled = false,  
+  Visible = true, 
+  Risky = false,
+  Callback = function(Value)
+    AimbotFunctions.Dynamic = Value
+  end,
+})
+
+Aimbot:AddSlider(".", {
+  Text = "Smoothness",
+  Default = 80,
   Min = 0,
   Max = 100,
   Rounding = 1,
@@ -712,60 +819,60 @@ SilentAim:AddSlider(".", {
   end,
 })
 
-SilentAim:AddSlider(".", {
+Aimbot:AddSlider(".", {
   Text = "Distance",
-  Default = 300,
+  Default = 315,
   Min = 10,
   Max = 1000,
-  Rounding = 1,
+  Rounding = 2,
   Compact = false,
   Visible = true,
   Callback = function(Value)
-    SilentAimFunctions.Distance = Value
+    AimbotFunctions.Distance = Value
   end,
 })
 
-SilentAim:AddDropdown(".", {
+Aimbot:AddDropdown(".", {
   Text = "Target Bone",
   Default = "Head",
   Values = {"Head", "Torso", "Left Leg", "Right Leg", "Left Arm", "Right Arm"},
   Multi = false,
   Visible = true,
   Callback = function(Value)
-    SilentAimFunctions.TargetBone = Value
+    AimbotFunctions.TargetBone = Value
   end,
 })
 
-SilentAim:AddToggle(".", {
-  Text = "Team Check",
+Aimbot:AddDropdown(".", {
+  Text = "Target Priority",
+  Default = "Closest to Crosshair",
+  Values = {"Closest to Crosshair", "Lowest Health", "Highest Health", "Farthest Distance", "Closest Distance", "Random"},
+  Multi = false,
+  Visible = true,
+  Callback = function(Value)
+    AimbotFunctions.TargetPriority = Value
+  end,
+})
+
+Aimbot:AddToggle(".", {
+  Text = "Target Visible Only",
   Default = false,
   Disabled = false,  
   Visible = true, 
   Risky = false,
   Callback = function(Value)
-    SilentAimFunctions.TeamCheck = Value
+    AimbotFunctions.TargetVisibleOnly = Value
   end,
 })
 
-SilentAim:AddToggle(".", {
-  Text = "Downed Check",
+Aimbot:AddToggle(".", {
+  Text = "Ignore Downed Target",
   Default = false,
   Disabled = false,  
   Visible = true, 
   Risky = false,
   Callback = function(Value)
-    SilentAimFunctions.DownedCheck = Value
-  end,
-})
-
-SilentAim:AddToggle(".", {
-  Text = "Wall Check",
-  Default = false,
-  Disabled = false,  
-  Visible = true, 
-  Risky = false,
-  Callback = function(Value)
-    SilentAimFunctions.WallCheck = Value
+    AimbotFunctions.IgnoreDownedTarget = Value
   end,
 })
 
