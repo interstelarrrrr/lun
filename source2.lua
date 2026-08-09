@@ -1525,28 +1525,32 @@ EnemySection:CreateToggle("Enabled", false, function(v)
     ESP.Enabled = v
 end)
 
-EnemySection:CreateToggle("Box", true, function(v) 
+EnemySection:CreateToggle("Box", false, function(v) 
     ESP.Box.Enabled = v
 end)
 
-EnemySection:CreateToggle("Box Fill", true, function(v) 
+EnemySection:CreateToggle("Box Fill", false, function(v) 
     ESP.BoxFill.Enabled = v
 end)
 
-EnemySection:CreateToggle("Health Bar", true, function(v) 
+EnemySection:CreateToggle("Health Bar", false, function(v) 
     ESP.HealthBar.Enabled = v
 end)
 
-EnemySection:CreateToggle("Health Text", true, function(v) 
+EnemySection:CreateToggle("Health Text", false, function(v) 
     ESP.HealthText.Enabled = v
 end)
 
-EnemySection:CreateToggle("Name", true, function(v) 
+EnemySection:CreateToggle("Name", false, function(v) 
     ESP.Name.Enabled = v
 end)
 
-EnemySection:CreateToggle("Weapon", true, function(v) 
+EnemySection:CreateToggle("Weapon", false, function(v) 
     ESP.ToolESP.Enabled = v
+end)
+
+EnemySection:CreateSlider("Distance", 1, 1000, 500, "m", function(v) 
+    ESP.Distance = v
 end)
 
 local Lighting = game:GetService("Lighting")
