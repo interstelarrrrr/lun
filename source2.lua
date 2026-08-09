@@ -354,27 +354,27 @@ Sec1:CreateToggle("Enable Legit Aimbot", false, function(v)
     LegitAimbotModule.Enabled = v
 end)
 
-Sec1:CreateToggle("Visible Check", true, function(v)
+Sec1:CreateToggle("Visible Check", false, function(v)
     LegitAimbotModule.Settings.VisibleCheck = v
 end)
 
-Sec1:CreateToggle("Forcefield Check", true, function(v)
+Sec1:CreateToggle("Forcefield Check", false, function(v)
     LegitAimbotModule.Settings.ForcefieldCheck = v
 end)
 
-Sec1:CreateToggle("Downed Check", true, function(v)
+Sec1:CreateToggle("Downed Check", false, function(v)
     LegitAimbotModule.Settings.DownedCheck = v
 end)
 
-Sec1:CreateToggle("Died Check", true, function(v)
+Sec1:CreateToggle("Died Check", false, function(v)
     LegitAimbotModule.Settings.DiedCheck = v
 end)
 
-Sec1:CreateToggle("Team Check", true, function(v)
+Sec1:CreateToggle("Team Check", false, function(v)
     LegitAimbotModule.Settings.TeamCheck = v
 end)
 
-Sec1:CreateToggle("Use Keybind", true, function(v)
+Sec1:CreateToggle("Use Keybind", false, function(v)
     LegitAimbotModule.Settings.UseKeybind = v
 end)
 
@@ -1547,10 +1547,6 @@ end)
 
 EnemySection:CreateToggle("Weapon", false, function(v) 
     ESP.ToolESP.Enabled = v
-end)
-
-EnemySection:CreateSlider("Distance", 1, 1000, 500, "m", function(v) 
-    ESP.Distance = v
 end)
 
 local Lighting = game:GetService("Lighting")
