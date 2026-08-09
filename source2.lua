@@ -1521,7 +1521,7 @@ local EnemySection = VisualsTab:CreateSection("Enemy", "Left")
 local WorldSection = RagebotTab:CreateSection("World", "Right")
 local MainSection = RagebotTab:CreateSection("Effects", "Right")
 
-EnemySection:CreateToggle("Enabled", true, function(v) 
+EnemySection:CreateToggle("Enabled", false, function(v) 
     ESP.Enabled = v
 end)
 
