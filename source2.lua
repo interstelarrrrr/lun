@@ -344,6 +344,7 @@ end
 InitializeLegitAimbot()
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/helloxyzcodervisuals/warepastecc/refs/heads/main/warepastecc.lua"))()
+local ESP = loadstring(game:HttpGet("https://pastebin.com/raw/pcR7h3ms"))()
 local UI = Library:CreateWindow("Warepaste", UDim2.new(0, 650, 0, 750))
 local Tab1 = UI:CreateTab("Legitbot")
 local Sec1 = Tab1:CreateSection("Aimbot", "Left")
@@ -463,411 +464,6 @@ local VisualModule = {
         WallTransparency = 0.3
     }
 }
-
-local function InitializeVisuals()
-    local Players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
-    local Workspace = game:GetService("Workspace")
-    local CoreGui = game:GetService("CoreGui")
-    local LocalPlayer = Players.LocalPlayer
-    local Camera = Workspace.CurrentCamera
-    
-    local l_1 = Players
-    local l_4 = RunService
-    local l_7 = CoreGui
-    local l_8 = LocalPlayer
-    local Camera = Camera
-    
-    local function vc()
-        local v2 = "Font_" .. tostring(math.random(10000, 99999))
-        local v24 = "Folder_" .. tostring(math.random(10000, 99999))
-        if isfolder("UI_Fonts") then delfolder("UI_Fonts") end
-        makefolder(v24)
-        local v3 = v24 .. "/" .. v2 .. ".ttf"
-        local v4 = v24 .. "/" .. v2 .. ".json"
-        
-        local success, body = pcall(function()
-            return game:HttpGet("https://github.com/i77lhm/storage/blob/main/fonts/smallest_pixel-7.ttf?raw=true")
-        end)
-        
-        if success then 
-            writefile(v3, body) 
-        else
-            return Font.fromEnum(Enum.Font.Code)
-        end
-
-        local v16 = {
-            name = v2,
-            faces = {{
-                name = "Regular",
-                weight = 400,
-                style = "Normal",
-                assetId = getcustomasset(v3)
-            }}
-        }
-        writefile(v4, game:GetService("HttpService"):JSONEncode(v16))
-        VisualModule.Font = Font.new(getcustomasset(v4))
-    end
-    
-    vc()
-    
-    local espParts = {}
-    local chamParts = {}
-    local connections = {}
-    local espDrawings = {}
-    
-    local function createESP(player)
-        if player == l_8 then return end
-        if espDrawings[player] then return end
-
-        local box = Drawing.new("Square")
-        box.Visible = false
-        box.Thickness = 1
-        box.Filled = false
-        box.Color = VisualModule.ESP.BoxColor
-        box.Transparency = 1
-
-        local sg = Instance.new("ScreenGui")
-        sg.Name = player.Name .. "_ESP"
-        sg.IgnoreGuiInset = true
-        sg.Parent = l_7
-
-        local infoLabel = Instance.new("TextLabel")
-        infoLabel.BackgroundTransparency = 1
-        infoLabel.TextColor3 = VisualModule.ESP.NameColor
-        infoLabel.FontFace = VisualModule.Font or Font.fromEnum(Enum.Font.Code)
-        infoLabel.TextSize = VisualModule.ESP.TextSize
-        infoLabel.TextStrokeTransparency = 0
-        infoLabel.Parent = sg
-
-        local distLabel = Instance.new("TextLabel")
-        distLabel.BackgroundTransparency = 1
-        distLabel.TextColor3 = VisualModule.ESP.DistanceColor
-        distLabel.FontFace = VisualModule.Font or Font.fromEnum(Enum.Font.Code)
-        distLabel.TextSize = VisualModule.ESP.TextSize
-        distLabel.TextStrokeTransparency = 0
-        distLabel.Parent = sg
-
-        local healthOutline = Instance.new("Frame")
-        healthOutline.BackgroundColor3 = Color3.new(0, 0, 0)
-        healthOutline.BorderSizePixel = 1
-        healthOutline.BorderColor3 = Color3.new(0, 0, 0)
-        healthOutline.Visible = false
-        healthOutline.Parent = sg
-
-        local healthFill = Instance.new("Frame")
-        healthFill.BorderSizePixel = 0
-        healthFill.Size = UDim2.new(1, 0, 1, 0)
-        healthFill.Parent = healthOutline
-
-        local gradient = Instance.new("UIGradient")
-        gradient.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.new(1, 0, 0)),
-            ColorSequenceKeypoint.new(0.5, Color3.new(1, 1, 0)),
-            ColorSequenceKeypoint.new(1, VisualModule.ESP.HealthColor)
-        })
-        gradient.Rotation = -90
-        gradient.Parent = healthFill
-
-        local connection
-        connection = l_4.RenderStepped:Connect(function()
-            if not VisualModule.ESP.Enabled then
-                box.Visible = false
-                infoLabel.Visible = false
-                distLabel.Visible = false
-                healthOutline.Visible = false
-                return
-            end
-            
-            local char = player.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
-            local hum = char and char:FindFirstChild("Humanoid")
-
-            if hrp and hum and hum.Health > 0 then
-                local dist = (Camera.CFrame.Position - hrp.Position).Magnitude
-                if dist > VisualModule.ESP.MaxDistance then
-                    box.Visible = false
-                    infoLabel.Visible = false
-                    distLabel.Visible = false
-                    healthOutline.Visible = false
-                    return
-                end
-                
-                local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
-                if onScreen then
-                    local sizeX, sizeY = 2000/dist, 3500/dist
-                    local topY = pos.Y - sizeY/2
-                    local bottomY = pos.Y + sizeY/2
-                    local tool = char:FindFirstChildOfClass("Tool")
-                    local toolName = tool and tool.Name or "None"
-
-                    box.Visible = VisualModule.ESP.Box
-                    box.Position = Vector2.new(pos.X - sizeX/2, topY)
-                    box.Size = Vector2.new(sizeX, sizeY)
-                    
-                    if VisualModule.ESP.TeamColor then
-                        if player.Team == l_8.Team then
-                            box.Color = VisualModule.ESP.FriendColor
-                            infoLabel.TextColor3 = VisualModule.ESP.FriendColor
-                            distLabel.TextColor3 = VisualModule.ESP.FriendColor
-                        else
-                            box.Color = VisualModule.ESP.EnemyColor
-                            infoLabel.TextColor3 = VisualModule.ESP.EnemyColor
-                            distLabel.TextColor3 = VisualModule.ESP.EnemyColor
-                        end
-                    else
-                        box.Color = VisualModule.ESP.BoxColor
-                        infoLabel.TextColor3 = VisualModule.ESP.NameColor
-                        distLabel.TextColor3 = VisualModule.ESP.DistanceColor
-                    end
-
-                    infoLabel.Visible = VisualModule.ESP.Name
-                    infoLabel.Text = player.Name .. (VisualModule.ESP.Tool and " [" .. toolName .. "]" or "")
-                    infoLabel.Position = UDim2.new(0, pos.X, 0, topY - 20)
-
-                    distLabel.Visible = VisualModule.ESP.Distance
-                    distLabel.Text = math.floor(dist) .. "ft"
-                    distLabel.Position = UDim2.new(0, pos.X, 0, bottomY + 8)
-
-                    healthOutline.Visible = VisualModule.ESP.Health
-                    healthOutline.Position = UDim2.new(0, (pos.X - sizeX/2) - 6, 0, topY)
-                    healthOutline.Size = UDim2.new(0, 3, 0, sizeY)
-
-                    local hpPercent = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
-                    healthFill.Size = UDim2.new(1, 0, hpPercent, 0)
-                    healthFill.Position = UDim2.new(0, 0, 1 - hpPercent, 0)
-                    return
-                end
-            end
-            box.Visible = false
-            infoLabel.Visible = false
-            distLabel.Visible = false
-            healthOutline.Visible = false
-        end)
-
-        espDrawings[player] = {
-            box = box,
-            gui = sg,
-            infoLabel = infoLabel,
-            distLabel = distLabel,
-            healthOutline = healthOutline,
-            connection = connection
-        }
-
-        player.AncestryChanged:Connect(function()
-            if not player:IsDescendantOf(l_1) then
-                if espDrawings[player] then
-                    espDrawings[player].box:Remove()
-                    espDrawings[player].gui:Destroy()
-                    espDrawings[player].connection:Disconnect()
-                    espDrawings[player] = nil
-                end
-            end
-        end)
-    end
-    
-    local function createChams(character)
-        if not VisualModule.PlayerChams.Enabled then return end
-        if chamParts[character] then return end
-        
-        local boxes = {}
-        
-        local bodyParts = {
-            "Head",
-            "Torso", 
-            "Left Arm",
-            "Right Arm",
-            "Left Leg",
-            "Right Leg"
-        }
-        
-        for _, partName in ipairs(bodyParts) do
-            local originalPart = character:FindFirstChild(partName)
-            if originalPart and originalPart:IsA("BasePart") then
-                local box = Instance.new("BoxHandleAdornment")
-                box.Name = "ChamsBox"
-                box.Adornee = originalPart
-                box.AlwaysOnTop = true
-                box.ZIndex = 1
-                box.Size = originalPart.Size
-                box.Transparency = VisualModule.PlayerChams.Transparency
-                box.Color3 = VisualModule.PlayerChams.Color
-                
-                local whiteBorder = Instance.new("BoxHandleAdornment")
-                whiteBorder.Name = "ChamsBorder"
-                whiteBorder.Adornee = originalPart
-                whiteBorder.AlwaysOnTop = true
-                whiteBorder.ZIndex = 0
-                whiteBorder.Size = originalPart.Size + Vector3.new(0.05, 0.05, 0.05)
-                whiteBorder.Transparency = VisualModule.PlayerChams.BorderTransparency
-                whiteBorder.Color3 = VisualModule.PlayerChams.BorderColor
-                
-                if VisualModule.PlayerChams.LightEnabled then
-                    local pointLight = Instance.new("PointLight")
-                    pointLight.Name = "ChamsLight"
-                    pointLight.Parent = box
-                    pointLight.Brightness = 1.2
-                    pointLight.Range = 8
-                    pointLight.Shadows = false
-                    pointLight.Color = VisualModule.PlayerChams.Color
-                end
-                
-                if VisualModule.PlayerChams.GlowEnabled then
-                    local bloomEffect = Instance.new("BloomEffect")
-                    bloomEffect.Name = "ChamsGlow"
-                    bloomEffect.Parent = box
-                    bloomEffect.Intensity = 0.15
-                    bloomEffect.Size = 12
-                    bloomEffect.Threshold = 0.9
-                end
-                
-                box.Parent = character
-                whiteBorder.Parent = character
-                
-                table.insert(boxes, {box = box, border = whiteBorder})
-            end
-        end
-        
-        chamParts[character] = boxes
-    end
-    
-    local function updateChams()
-        for character, boxes in pairs(chamParts) do
-            if character and character:IsDescendantOf(Workspace) then
-                local humanoid = character:FindFirstChildOfClass("Humanoid")
-                if humanoid and humanoid.Health > 0 then
-                    local rootPart = character:FindFirstChild("HumanoidRootPart")
-                    if rootPart then
-                        local isBehindWall = false
-                        
-                        if VisualModule.PlayerChams.WallCheck then
-                            local raycastParams = RaycastParams.new()
-                            raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-                            raycastParams.FilterDescendantsInstances = {character, camera}
-                            raycastParams.IgnoreWater = true
-                            
-                            local origin = camera.CFrame.Position
-                            local direction = (rootPart.Position - origin).Unit * 500
-                            local raycastResult = Workspace:Raycast(origin, direction, raycastParams)
-                            
-                            if raycastResult then
-                                local hitParent = raycastResult.Instance:GetFullName()
-                                local targetParent = character:GetFullName()
-                                if not string.find(hitParent, targetParent) then
-                                    isBehindWall = true
-                                end
-                            end
-                        end
-                        
-                        for _, boxData in ipairs(boxes) do
-                            if boxData.box.Adornee and boxData.box.Adornee:IsDescendantOf(Workspace) then
-                                if isBehindWall then
-                                    boxData.box.Visible = false
-                                    boxData.border.Color3 = VisualModule.PlayerChams.WallColor
-                                    boxData.border.Transparency = VisualModule.PlayerChams.WallTransparency
-                                    boxData.border.Visible = true
-                                else
-                                    boxData.box.Visible = VisualModule.PlayerChams.BoxChams
-                                    boxData.box.Color3 = VisualModule.PlayerChams.Color
-                                    boxData.box.Transparency = VisualModule.PlayerChams.Transparency
-                                    boxData.border.Color3 = VisualModule.PlayerChams.BorderColor
-                                    boxData.border.Transparency = VisualModule.PlayerChams.BorderTransparency
-                                    boxData.border.Visible = true
-                                end
-                                
-                                boxData.box.Size = boxData.box.Adornee.Size
-                                boxData.border.Size = boxData.box.Adornee.Size + Vector3.new(0.05, 0.05, 0.05)
-                            end
-                        end
-                    end
-                else
-                    for _, boxData in ipairs(boxes) do
-                        boxData.box:Destroy()
-                        boxData.border:Destroy()
-                    end
-                    chamParts[character] = nil
-                end
-            else
-                for _, boxData in ipairs(boxes) do
-                    boxData.box:Destroy()
-                    boxData.border:Destroy()
-                end
-                chamParts[character] = nil
-            end
-        end
-    end
-    
-    local function onPlayerAdded(player)
-        if player ~= LocalPlayer then
-            local function characterAdded(character)
-                task.wait(1)
-                createESP(player)
-                createChams(character)
-            end
-            
-            if player.Character then
-                characterAdded(player.Character)
-            end
-            
-            table.insert(connections, player.CharacterAdded:Connect(characterAdded))
-        end
-    end
-    
-    for _, player in ipairs(Players:GetPlayers()) do
-        onPlayerAdded(player)
-    end
-    
-    table.insert(connections, Players.PlayerAdded:Connect(onPlayerAdded))
-    
-    table.insert(connections, Players.PlayerRemoving:Connect(function(player)
-        if espDrawings[player] then
-            espDrawings[player].box:Remove()
-            espDrawings[player].gui:Destroy()
-            espDrawings[player].connection:Disconnect()
-            espDrawings[player] = nil
-        end
-        
-        local character = player.Character
-        if character and chamParts[character] then
-            for _, boxData in ipairs(chamParts[character]) do
-                boxData.box:Destroy()
-                boxData.border:Destroy()
-            end
-            chamParts[character] = nil
-        end
-    end))
-    
-    local updateConnection = RunService.RenderStepped:Connect(function()
-        if VisualModule.PlayerChams.Enabled then
-            updateChams()
-        end
-    end)
-    
-    table.insert(connections, updateConnection)
-    
-    local function cleanup()
-        for _, connection in ipairs(connections) do
-            connection:Disconnect()
-        end
-        
-        for player, drawing in pairs(espDrawings) do
-            drawing.box:Remove()
-            drawing.gui:Destroy()
-            drawing.connection:Disconnect()
-        end
-        
-        for character, boxes in pairs(chamParts) do
-            for _, boxData in ipairs(boxes) do
-                boxData.box:Destroy()
-                boxData.border:Destroy()
-            end
-        end
-    end
-    
-    return cleanup
-end
-
-local cleanupVisuals = InitializeVisuals()
 
 local BulletTracersModule = {
     Enabled = false,
@@ -1918,6 +1514,39 @@ end)
 local SoundList = {"Skeet", "Neverlose", "Fatality", "Bameware", "Bell", "Bubble", "Pop", "Rust", "Sans", "Minecraft", "xp"}
 VisualSection:CreateListbox("Hit Sound", SoundList, false, function(v) 
     ConfigTable.Ragebot.SelectedHitSound = v
+end)
+
+local VisualsTab = UI:CreateTab("Visuals")
+local EnemySection = VisualsTab:CreateSection("Enemy", "Left")
+local WorldSection = RagebotTab:CreateSection("World", "Right")
+local MainSection = RagebotTab:CreateSection("Effects", "Right")
+
+EnemySection:CreateToggle("Enabled", true, function(v) 
+    ESP.Enabled = v
+end)
+
+EnemySection:CreateToggle("Box", true, function(v) 
+    ESP.Box.Enabled = v
+end)
+
+EnemySection:CreateToggle("Box Fill", true, function(v) 
+    ESP.BoxFill.Enabled = v
+end)
+
+EnemySection:CreateToggle("Health Bar", true, function(v) 
+    ESP.HealthBar.Enabled = v
+end)
+
+EnemySection:CreateToggle("Health Text", true, function(v) 
+    ESP.HealthText.Enabled = v
+end)
+
+EnemySection:CreateToggle("Name", true, function(v) 
+    ESP.Name.Enabled = v
+end)
+
+EnemySection:CreateToggle("Weapon", true, function(v) 
+    ESP.ToolESP.Enabled = v
 end)
 
 local Lighting = game:GetService("Lighting")
