@@ -1,4 +1,4 @@
--- Thugsense (mobile-fixed)
+-- Thugsense 
 
 local LoadingTick = os.clock()
 
